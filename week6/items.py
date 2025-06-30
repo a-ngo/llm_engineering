@@ -4,21 +4,24 @@ import re
 
 BASE_MODEL = "meta-llama/Meta-Llama-3.1-8B"
 
-MIN_TOKENS = 150 # Any less than this, and we don't have enough useful content
-MAX_TOKENS = 160 # Truncate after this many tokens. Then after adding in prompt text, we will get to around 180 tokens
+MIN_TOKENS = 150  # Any less than this, and we don't have enough useful content
+MAX_TOKENS = 160  # Truncate after this many tokens. Then after adding in prompt text, we will get to around 180 tokens
 
 MIN_CHARS = 300
 CEILING_CHARS = MAX_TOKENS * 7
+
 
 class Item:
     """
     An Item is a cleaned, curated datapoint of a Product with a Price
     """
-    
-    tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL, trust_remote_code=True)
+
+    tokenizer = AutoTokenizer.from_pretrained(
+        BASE_MODEL, trust_remote_code=True)
     PREFIX = "Price is $"
     QUESTION = "How much does this cost to the nearest dollar?"
-    REMOVALS = ['"Batteries Included?": "No"', '"Batteries Included?": "Yes"', '"Batteries Required?": "No"', '"Batteries Required?": "Yes"', "By Manufacturer", "Item", "Date First", "Package", ":", "Number of", "Best Sellers", "Number", "Product "]
+    REMOVALS = ['"Batteries Included?": "No"', '"Batteries Included?": "Yes"', '"Batteries Required?": "No"', '"Batteries Required?": "Yes"',
+                "By Manufacturer", "Item", "Date First", "Package", ":", "Number of", "Best Sellers", "Number", "Product "]
 
     title: str
     price: float
@@ -48,11 +51,12 @@ class Item:
         Also remove words that are 7+ chars and contain numbers, as these are likely irrelevant product numbers
         """
         stuff = re.sub(r'[:\[\]"{}【】\s]+', ' ', stuff).strip()
-        stuff = stuff.replace(" ,", ",").replace(",,,",",").replace(",,",",")
+        stuff = stuff.replace(" ,", ",").replace(",,,", ",").replace(",,", ",")
         words = stuff.split(' ')
-        select = [word for word in words if len(word)<7 or not any(char.isdigit() for char in word)]
+        select = [word for word in words if len(
+            word) < 7 or not any(char.isdigit() for char in word)]
         return " ".join(select)
-    
+
     def parse(self, data):
         """
         Parse this datapoint and if it fits within the allowed Token range,
@@ -83,7 +87,8 @@ class Item:
         """
         self.prompt = f"{self.QUESTION}\n\n{text}\n\n"
         self.prompt += f"{self.PREFIX}{str(round(self.price))}.00"
-        self.token_count = len(self.tokenizer.encode(self.prompt, add_special_tokens=False))
+        self.token_count = len(self.tokenizer.encode(
+            self.prompt, add_special_tokens=False))
 
     def test_prompt(self):
         """
@@ -96,8 +101,3 @@ class Item:
         Return a String version of this Item
         """
         return f"<{self.title} = ${self.price}>"
-
-        
-
-    
-    
