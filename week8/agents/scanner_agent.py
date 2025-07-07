@@ -23,7 +23,7 @@ class ScannerAgent(Agent):
         },
         ...
     ]}"""
-    
+
     USER_PROMPT_PREFIX = """Respond with the most promising 5 deals from this list, selecting those which have the most detailed, high quality product description and a clear price that is greater than 0.
     Respond strictly in JSON, and only JSON. You should rephrase the description to be a summary of the product itself, not the terms of the deal.
     Remember to respond with a paragraph of text in the product_description field for each of the 5 items that you select.
@@ -55,7 +55,8 @@ class ScannerAgent(Agent):
         urls = [opp.deal.url for opp in memory]
         scraped = ScrapedDeal.fetch()
         result = [scrape for scrape in scraped if scrape.url not in urls]
-        self.log(f"Scanner Agent received {len(result)} deals not already scraped")
+        self.log(
+            f"Scanner Agent received {len(result)} deals not already scraped")
         return result
 
     def make_user_prompt(self, scraped) -> str:
@@ -67,7 +68,7 @@ class ScannerAgent(Agent):
         user_prompt += self.USER_PROMPT_SUFFIX
         return user_prompt
 
-    def scan(self, memory: List[str]=[]) -> Optional[DealSelection]:
+    def scan(self, memory: List[str] = []) -> Optional[DealSelection]:
         """
         Call OpenAI to provide a high potential list of deals with good descriptions and prices
         Use StructuredOutputs to ensure it conforms to our specifications
@@ -83,12 +84,12 @@ class ScannerAgent(Agent):
                 messages=[
                     {"role": "system", "content": self.SYSTEM_PROMPT},
                     {"role": "user", "content": user_prompt}
-              ],
+                ],
                 response_format=DealSelection
             )
             result = result.choices[0].message.parsed
-            result.deals = [deal for deal in result.deals if deal.price>0]
-            self.log(f"Scanner Agent received {len(result.deals)} selected deals with price>0 from OpenAI")
+            result.deals = [deal for deal in result.deals if deal.price > 0]
+            self.log(
+                f"Scanner Agent received {len(result.deals)} selected deals with price>0 from OpenAI")
             return result
         return None
-                

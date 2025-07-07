@@ -9,11 +9,12 @@ import time
 
 feeds = [
     "https://www.dealnews.com/c142/Electronics/?rss=1",
-        "https://www.dealnews.com/c39/Computers/?rss=1",
-        "https://www.dealnews.com/c238/Automotive/?rss=1",
-        "https://www.dealnews.com/f1912/Smart-Home/?rss=1",
-        "https://www.dealnews.com/c196/Home-Garden/?rss=1",
-       ]
+    "https://www.dealnews.com/c39/Computers/?rss=1",
+    "https://www.dealnews.com/c238/Automotive/?rss=1",
+    "https://www.dealnews.com/f1912/Smart-Home/?rss=1",
+    "https://www.dealnews.com/c196/Home-Garden/?rss=1",
+]
+
 
 def extract(html_snippet: str) -> str:
     """
@@ -21,7 +22,7 @@ def extract(html_snippet: str) -> str:
     """
     soup = BeautifulSoup(html_snippet, 'html.parser')
     snippet_div = soup.find('div', class_='snippet summary')
-    
+
     if snippet_div:
         description = snippet_div.get_text(strip=True)
         description = BeautifulSoup(description, 'html.parser').get_text()
@@ -30,6 +31,7 @@ def extract(html_snippet: str) -> str:
     else:
         result = html_snippet
     return result.replace('\n', ' ')
+
 
 class ScrapedDeal:
     """
@@ -72,7 +74,7 @@ class ScrapedDeal:
         return f"Title: {self.title}\nDetails: {self.details.strip()}\nFeatures: {self.features.strip()}\nURL: {self.url}"
 
     @classmethod
-    def fetch(cls, show_progress : bool = False) -> List[Self]:
+    def fetch(cls, show_progress: bool = False) -> List[Self]:
         """
         Retrieve all deals from the selected RSS feeds
         """
@@ -85,6 +87,7 @@ class ScrapedDeal:
                 time.sleep(0.5)
         return deals
 
+
 class Deal(BaseModel):
     """
     A class to Represent a Deal with a summary description
@@ -93,11 +96,13 @@ class Deal(BaseModel):
     price: float
     url: str
 
+
 class DealSelection(BaseModel):
     """
     A class to Represent a list of Deals
     """
     deals: List[Deal]
+
 
 class Opportunity(BaseModel):
     """
