@@ -20,7 +20,7 @@ class FrontierAgent(Agent):
     color = Agent.BLUE
 
     MODEL = "gpt-4o-mini"
-    
+
     def __init__(self, collection):
         """
         Set up this instance by connecting to OpenAI or DeepSeek, to the Chroma Datastore,
@@ -28,16 +28,29 @@ class FrontierAgent(Agent):
         """
         self.log("Initializing Frontier Agent")
         deepseek_api_key = os.getenv("DEEPSEEK_API_KEY")
+
+        API_KEY = os.getenv("API_KEY")
+        BASE_URL = os.getenv("BASE_URL")
+        SUB_KEY_STRING = os.getenv("SUB_KEY_STRING")
+        OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
         if deepseek_api_key:
-            self.client = OpenAI(api_key=deepseek_api_key, base_url="https://api.deepseek.com")
+            self.client = OpenAI(api_key=deepseek_api_key,
+                                 base_url="https://api.deepseek.com")
             self.MODEL = "deepseek-chat"
             self.log("Frontier Agent is set up with DeepSeek")
         else:
-            self.client = OpenAI()
+            self.client = OpenAI(
+                api_key=API_KEY,
+                base_url=BASE_URL,
+                default_headers={
+                    SUB_KEY_STRING: OPENAI_API_KEY}
+            )
             self.MODEL = "gpt-4o-mini"
             self.log("Frontier Agent is setting up with OpenAI")
         self.collection = collection
-        self.model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+        self.model = SentenceTransformer(
+            'sentence-transformers/all-MiniLM-L6-v2')
         self.log("Frontier Agent is ready")
 
     def make_context(self, similars: List[str], prices: List[float]) -> str:
@@ -75,9 +88,11 @@ class FrontierAgent(Agent):
         """
         Return a list of items similar to the given one by looking in the Chroma datastore
         """
-        self.log("Frontier Agent is performing a RAG search of the Chroma datastore to find 5 similar products")
+        self.log(
+            "Frontier Agent is performing a RAG search of the Chroma datastore to find 5 similar products")
         vector = self.model.encode([description])
-        results = self.collection.query(query_embeddings=vector.astype(float).tolist(), n_results=5)
+        results = self.collection.query(
+            query_embeddings=vector.astype(float).tolist(), n_results=5)
         documents = results['documents'][0][:]
         prices = [m['price'] for m in results['metadatas'][0][:]]
         self.log("Frontier Agent has found similar products")
@@ -87,7 +102,7 @@ class FrontierAgent(Agent):
         """
         A utility that plucks a floating point number out of a string
         """
-        s = s.replace('$','').replace(',','')
+        s = s.replace('$', '').replace(',', '')
         match = re.search(r"[-+]?\d*\.\d+|\d+", s)
         return float(match.group()) if match else 0.0
 
@@ -99,15 +114,18 @@ class FrontierAgent(Agent):
         :return: an estimate of the price
         """
         documents, prices = self.find_similars(description)
-        self.log(f"Frontier Agent is about to call {self.MODEL} with context including 5 similar products")
+        self.log(
+            f"Frontier Agent is about to call {self.MODEL} with context including 5 similar products")
+
+        API_VERSION = os.getenv("API_VERSION")
         response = self.client.chat.completions.create(
-            model=self.MODEL, 
+            model=self.MODEL,
             messages=self.messages_for(description, documents, prices),
             seed=42,
-            max_tokens=5
+            max_tokens=5,
+            extra_query={"api-version": API_VERSION}
         )
         reply = response.choices[0].message.content
         result = self.get_price(reply)
         self.log(f"Frontier Agent completed - predicting ${result:.2f}")
         return result
-        
