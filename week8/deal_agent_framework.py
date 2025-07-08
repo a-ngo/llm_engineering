@@ -18,13 +18,16 @@ WHITE = '\033[37m'
 RESET = '\033[0m'
 
 # Colors for plot
-CATEGORIES = ['Appliances', 'Automotive', 'Cell_Phones_and_Accessories', 'Electronics','Musical_Instruments', 'Office_Products', 'Tools_and_Home_Improvement', 'Toys_and_Games']
-COLORS = ['red', 'blue', 'brown', 'orange', 'yellow', 'green' , 'purple', 'cyan']
+CATEGORIES = ['Appliances', 'Automotive', 'Cell_Phones_and_Accessories', 'Electronics',
+              'Musical_Instruments', 'Office_Products', 'Tools_and_Home_Improvement', 'Toys_and_Games']
+COLORS = ['red', 'blue', 'brown', 'orange',
+          'yellow', 'green', 'purple', 'cyan']
+
 
 def init_logging():
     root = logging.getLogger()
     root.setLevel(logging.INFO)
-    
+
     handler = logging.StreamHandler(sys.stdout)
     handler.setLevel(logging.INFO)
     formatter = logging.Formatter(
@@ -33,6 +36,7 @@ def init_logging():
     )
     handler.setFormatter(formatter)
     root.addHandler(handler)
+
 
 class DealAgentFramework:
 
@@ -52,7 +56,7 @@ class DealAgentFramework:
             self.log("Initializing Agent Framework")
             self.planner = PlanningAgent(self.collection)
             self.log("Agent Framework is ready")
-        
+
     def read_memory(self) -> List[Opportunity]:
         if os.path.exists(self.MEMORY_FILENAME):
             with open(self.MEMORY_FILENAME, "r") as file:
@@ -84,7 +88,8 @@ class DealAgentFramework:
     def get_plot_data(cls, max_datapoints=10000):
         client = chromadb.PersistentClient(path=cls.DB)
         collection = client.get_or_create_collection('products')
-        result = collection.get(include=['embeddings', 'documents', 'metadatas'], limit=max_datapoints)
+        result = collection.get(
+            include=['embeddings', 'documents', 'metadatas'], limit=max_datapoints)
         vectors = np.array(result['embeddings'])
         documents = result['documents']
         categories = [metadata['category'] for metadata in result['metadatas']]
@@ -94,6 +99,5 @@ class DealAgentFramework:
         return documents, reduced_vectors, colors
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     DealAgentFramework().run()
-    
